@@ -1,0 +1,44 @@
+
+#tasks,#stories { list-style-type: none; margin: 0; padding: 0; width: 90% }
+#tasks > li,#stories > li { margin: 0 5px 5px 5px; padding: .5em 1em; font-size: 1.2em; min-height: 1.5em; }
+.ui-state-highlight { height: 1.5em; line-height: 1.2em; }
+
+.col { float:left; width:50%}
+#tasks .title,
+#stories .title {
+  width :80%;
+  min-height: 1em;
+  
+}
+.assign { float:left; width:10px;}
+#tasks .handle,
+#stories .handle {
+    margin-left: -1em;
+    position: absolute;
+}
+#tasks .points,
+#stories .points {
+  width : 20px;
+  min-height: 1em;
+  float:left;
+}
+#tasks .points:focus:before,
+#stories .points:focus:before {
+  content: "Points: "
+}
+#stories .title:focus:before {
+  content: "Story: "
+}
+#tasks .title:focus:before {
+  content: "Task: "
+}
+.selector {
+  float:left;
+}
+
+.sub-tasks > li {
+  opacity: .5
+}
+.sub-tasks > li.active {
+  opacity: 1
+}
