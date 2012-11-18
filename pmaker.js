@@ -78,43 +78,8 @@ $(function() {
     handle: '.handle',
     //helper: "clone",
     'change'  : function (e, ui) {
-      p = $(".placeholder");
-      items = $('#stories li')
-      pi = $('#stories li').index(p);
-      ui.item.find(".dep").each(function() {
-        did = $(this).text();
-        dep = $("[id='" + $(this).text() + "']");
-        di = $('#stories li').index(dep);
-        console.log(pi +" "+di);
-        if (di > pi) {
-          console.log("move");
-          p.before(dep);
-        }
-        placed = 0;
-        for(i=di;i<=pi; i++) {
-          $(items.get(i)).find(".dep").each(function() {
-            if($(this).text() == did ) {
-              placed = 1;
-              items.get(i).before(dep);
-            }
-          });
-        }
-        if(placed == 0) {
-          p.before(dep);
-        }
-
-      });
-
     },
     'start': function (e, ui) { 
-      $("#stories li").each(function() {
-        ui.item.find(".dep").each(function() {
-          //$("[id='" + $(this).text() + "']").appendTo(ui.item);
-
-          console.log($(this).text());
-        });
-      });
-      console.log(ui);
     },
     stop : function(e,ui){
       reScore(ui.item);
