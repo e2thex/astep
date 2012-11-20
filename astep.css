@@ -1,0 +1,74 @@
+
+#tasks,#stories { list-style-type: none; margin: 0; padding: 0; width: 90% }
+#tasks > li,#stories > li { margin: 0 5px 5px 5px; padding: .5em 1em; font-size: 1.2em; min-height: 1.5em; position:relative}
+.ui-state-highlight { height: 1.5em; line-height: 1.2em; }
+
+.col { float:left; width:50%}
+#tasks .title,
+#stories .title {
+  width :80%;
+  min-height: 1em;
+  
+}
+.assign { 
+    background: url("./add_notes.png") no-repeat scroll center center transparent;
+    height: 15px;
+    text-indent: -1000px;
+    cursor:move;
+    width: 15px;
+}
+#tasks .handle,
+#stories .handle {
+    margin-left: -1em;
+    position: absolute;
+    cursor:move;
+}
+#tasks .points,
+#stories .points {
+  min-height: 1em;
+  position:absolute;
+  right: 0;
+  top: 0;
+  padding :5px;
+  background : #dddddd;
+
+}
+#tasks .points:focus:before,
+#stories .points:focus:before {
+  content: "Points: "
+}
+#stories .story .title:focus:before {
+  content: "Story: "
+}
+#stories .marker .title:focus:before {
+  content: "Benchmark: "
+}
+#tasks .title:focus:before {
+  content: "Task: "
+}
+.selector {
+  float:left;
+}
+
+#stories li.marker {
+  background-color: lightSteelBlue;
+  background-image:none;
+}
+
+.sub-tasks li {
+  opacity: .5;
+  cursor: not-allowed;
+   text-decoration: line-through;
+}
+.sub-tasks li.active {
+  opacity: 1;
+   text-decoration: none;
+}
+.current-drop-area {
+  outline: 4px solid green;
+}
+.task .title,
+.sub-task .title
+{
+  color: #1304B9;
+}
