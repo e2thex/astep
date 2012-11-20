@@ -2,11 +2,13 @@
 
 (function($) {
 $(function() {
+  console.log(document);
+  $('.marker').append("<div class = 'fixed-points contenteditable' contenteditable=TRUE></div>");
 
   $( "#add-story").click(function() {
     id = uuid();
     console.log(id);
-    newli = $("<li class = 'for-assign ui-state-default story' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'points' ></div><ul class = 'sub-tasks'></ul></li>");
+    newli = $("<li class = 'for-assign ui-state-default story' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'value contenteditable' contenteditable=TRUE></div><div class = 'points' ></div><ul class = 'sub-tasks'></ul></li>");
     $("#stories").append(newli);
     newli.find(".title").focus();
     doit();
@@ -14,7 +16,7 @@ $(function() {
   $( "#add-marker").click(function() {
     id = uuid();
     console.log(id);
-    newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
+    newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
     $("#stories").append(newli);
     newli.find(".title").focus();
     doit();
@@ -24,6 +26,8 @@ $(function() {
     s = $("html").html();
     s = "<html>"+s+"</html>";
     s = s.replace(/\r\n|\r/g, "\n");
+    base = document.URL.replace(/\/[^\/]*html/, "/");
+    s = s.replace(/\.\//, base);
     uri = "data:text/html;charset=utf-8,"+s;
     $(".save").attr("href", uri);
   });
@@ -82,10 +86,41 @@ $(function() {
       });
       $(this).find(".points").text(points);
     });
+    var marker_move_rec = function(marker) {
+      fixed_points = $(marker).find(".fixed-points").text();
+      points = 0;
+      running_points = 0;
+      $(marker).prevAll().add().each(function() {
+        if($(this).hasClass("marker")) {
+          points = 0;
+        }
+        if($(this).hasClass("story")) {
+          points += 1*$(this).children(".points").text();
+          running_points += 1*$(this).children(".points").text();
+        }
+      });
+      if(fixed_points) {
+        next = points + 1*$(marker).next().children(".points").text();
+        prev = points - 1*$(marker).prev().children(".points").text();
+        if(next <= fixed_points) {
+          $(marker).next().after(marker);
+          marker_move_rec(marker);
+        }
+        if(points > fixed_points) {
+          $(marker).prev().before(marker);
+          marker_move_rec(marker);
+        }
+      }
+      return [points, running_points]
+    }
     $('.marker').each(function() {
       points = 0;
       running_points = 0;
       hit_marker = false;
+      p = marker_move_rec(this);
+      $(this).find(".points").text(p[0] + " of " + p[1]);
+      console.log(p);
+      /*
       $(this).prevAll().each(function() {
         hit_marker = hit_marker || $(this).hasClass("marker");
         if($(this).hasClass("story")) {
@@ -97,6 +132,7 @@ $(function() {
         }
       })
       $(this).find(".points").text(points + " of " + running_points);
+      */
     });
   };
   $('.selector-all').click(function() {
@@ -122,6 +158,7 @@ $(function() {
       'revert':true, 
       'handle': '.assign',
       'helper' : 'clone',
+      'scope' : 'assignment',
       'start' : function (e, ui) {
         selected = $(ui.helper).siblings().has(".selector:checked").not(ui.helper).clone();
         ui.helper.append(selected);
@@ -132,6 +169,7 @@ $(function() {
     });
     $("li.for-assign").droppable({
       'hoverClass' : "current-drop-area",
+      'scope' : 'assignment',
       drop: function(e, ui) {
         droppable = $(this);
         if(ui.draggable.hasClass('assignee')) {
@@ -149,12 +187,10 @@ $(function() {
     });
   }
   doit();
-  /*
   $( "#tasks" ).sortable({
     placeholder: "placeholder",
     handle: '.handle',
   });
-  */
   $( "#stories" ).sortable({
     placeholder: "placeholder",
     handle: '.handle',

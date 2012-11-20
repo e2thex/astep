@@ -23,6 +23,18 @@
     position: absolute;
     cursor:move;
 }
+#tasks .fixed-points:focus:before {
+  content: "LOE: "
+}
+#stories .fixed-points {
+  min-height: 1em;
+  position:absolute;
+  right: 0;
+  top: 1em;
+  padding :5px;
+  background : red;
+
+}
 #tasks .points,
 #stories .points {
   min-height: 1em;
