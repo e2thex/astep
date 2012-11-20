@@ -27,7 +27,7 @@ $(function() {
     s = "<html>"+s+"</html>";
     s = s.replace(/\r\n|\r/g, "\n");
     base = document.URL.replace(/\/[^\/]*html/, "/");
-    s = s.replace(/\.\//, base);
+    s = s.replace(/\.\//g, base);
     uri = "data:text/html;charset=utf-8,"+s;
     $(".save").attr("href", uri);
   });
@@ -102,11 +102,11 @@ $(function() {
       if(fixed_points) {
         next = points + 1*$(marker).next().children(".points").text();
         prev = points - 1*$(marker).prev().children(".points").text();
-        if(next <= fixed_points) {
+        if((next <= fixed_points) && $(marker).next().length) {
           $(marker).next().after(marker);
           marker_move_rec(marker);
         }
-        if(points > fixed_points) {
+        if((points > fixed_points) && $(marker).prev().length) {
           $(marker).prev().before(marker);
           marker_move_rec(marker);
         }
