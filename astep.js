@@ -1,22 +1,81 @@
-
-
 (function($) {
 $(function() {
-  console.log(document);
   $('.marker').append("<div class = 'fixed-points contenteditable' contenteditable=TRUE></div>");
 
-  $( "#add-story").click(function() {
-    id = uuid();
-    console.log(id);
-    newli = $("<li class = 'for-assign ui-state-default story' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'value contenteditable' contenteditable=TRUE></div><div class = 'points' ></div><ul class = 'sub-tasks'></ul></li>");
+  $( ".order-value-loe").click(function() {
+    stories = $("#stories .story");
+    done_task = []
+    reorder_stories = []
+    while(stories.length) {
+      result = rec_find_most_val(stories, done_tasks)
+      reorder_stories.push(result[0]);
+      stories = stories.remove(result[0]);
+      done_tasks = restult[1];
+    }
+  });
+  var rec_find_most_val = function (stories, done_tasks) {
+    vloe_max = 0;
+    story_max = '';
+    tasks_max = [];
+    stories.each(function() {
+      sid = $(this).attr("id");
+      tasks = done_tasks;
+      points = 0;
+      $(this).find(".sub-task").each(function() {
+        id = $(this).attr("task_id");
+        if(tasks.indexOf(id) == -1) {
+          points += 1*$(this).attr("points");
+          tasks.push(id);
+        }
+      });
+      vloe = $(this).find(".value").text()/points
+      if (vloe > vloe_max) {
+        vloe_max = vloe;
+        story_max = $(this);
+        tasks_max = tasks;
+      }
+    });
+    return [story_max, tasks_max]
+    console.log(vloe);
+  }
+  $( "#add-templete").click(function() {
+    var options = "<option value = '1'>not</option><option value = '2'>moderately</option><option value='4'>very</option>";
+    var tform = $("<div>Create a templete for the <input class='content-type'></input> Content Type, it data input is <select class='data-entry'>"+options+"</select> complicated, and the display is <select class='display'>"+options+"</select> complicated. <button value = 'add'>Add</button></div>");
+    tform.find("button").click(function(e) {
+      var name = $(this).parent().find(".content-type").val();
+      var ic = $(this).parent().find(".data-entry").val();
+      var dc = $(this).parent().find(".display").val();
+      var storyEntry = addStory("input-"+name);
+      storyEntry.find('.title').html("Authenticated User enters system and create new "+name+" content item.");
+      var storyDisplay = addStory("display-"+name);
+      storyDisplay.find('.title').html("Visitor navigates to a page of type "+name+" and sees themed content.");
+      var taskDrupal = addTask("install-drupal", "Install Drupal", "3");
+      var taskBuild = addTask("build-"+name, "Build out "+name+" Content Type", ic);
+      var taskTheme = addTask("theme-"+name, "Theme "+name+" Content Type Page", dc);
+      assign(taskBuild, taskDrupal);
+      assign(taskTheme, taskDrupal);
+      assign(taskTheme, taskBuild);
+      assign(storyEntry, taskBuild);
+      assign(storyDisplay, taskTheme);
+    });
+    tform.dialog();
+ 
+  });
+  var addStory = function(id) {
+    var id = typeof id == 'undefined' ? uuid() : id;
+    var newli = $("<li class = 'for-assign ui-state-default story' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'value contenteditable' contenteditable=TRUE></div><div class = 'points' ></div><ul class = 'sub-tasks'></ul></li>");
     $("#stories").append(newli);
     newli.find(".title").focus();
     doit();
+    return newli;
+  }
+  $( "#add-story").click(function() {
+    addStory();
   });
   $( "#add-marker").click(function() {
     id = uuid();
     console.log(id);
-    newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
+    newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'value'></div> <div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
     $("#stories").append(newli);
     newli.find(".title").focus();
     doit();
@@ -32,24 +91,40 @@ $(function() {
     $(".save").attr("href", uri);
   });
   $( "#add-task").click(function() {
-    id = uuid();
-    console.log(id);
-    newli = $("<li class = 'task assignee for-assign ui-state-default' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'points contenteditable' contenteditable=TRUE></div><div class = 'assign'>assign</div><ul class = 'sub-tasks'></ul></li>");
-    $("#tasks").append(newli);
-    newli.find(".title").focus();
-    newli.find(".title").blur(function(e) {
-      task = $(this).parent();
-      id = task.attr("id");
-      $("[task_id='"+id+"']").children(".title").text($(this).text());
-    });
-    newli.find(".points").blur(function(e) {
-      task = $(this).parent();
-      id = task.attr("id");
-      $("[task_id='"+id+"']").attr("points", $(this).text());
-      reScoreAll();
-    });
-    doit();
+    addTask();
   });
+  var addTask = function(id, title, points) {
+    var id = typeof id == 'undefined' ? uuid() : id;
+    if( $("#"+id).length == 0) {
+      var newli = $("<li class = 'task assignee for-assign ui-state-default' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'points contenteditable' contenteditable=TRUE></div><div class = 'assign'>assign</div><ul class = 'sub-tasks'></ul></li>");
+      $("#tasks").append(newli);
+      if(typeof title != 'undefined') {
+        newli.find(".title").html(title);
+      }
+      else {
+        newli.find(".title").focus();
+      }
+      if(typeof points != 'undefined') {
+        newli.find(".points").html(points);
+      }
+      newli.find(".title").blur(function(e) {
+        task = $(this).parent();
+        id = task.attr("id");
+        $("[task_id='"+id+"']").children(".title").text($(this).text());
+      });
+      newli.find(".points").blur(function(e) {
+        task = $(this).parent();
+        id = task.attr("id");
+        $("[task_id='"+id+"']").attr("points", $(this).text());
+        reScoreAll();
+      });
+      doit();
+      return newli;
+    }
+    else {
+      return $("#"+id);
+    }
+  };
   var recSubTask = function(subTask) {
     id = $(subTask).attr("task_id");
     task = $("#" + id);
@@ -87,21 +162,26 @@ $(function() {
       $(this).find(".points").text(points);
     });
     var marker_move_rec = function(marker) {
-      fixed_points = $(marker).find(".fixed-points").text();
-      points = 0;
-      running_points = 0;
+      var fixed_points = $(marker).find(".fixed-points").text();
+      var points = 0;
+      var value = 0;
+      var running_points = 0;
+      var hit_marker = false;
       $(marker).prevAll().add().each(function() {
         if($(this).hasClass("marker")) {
-          points = 0;
+          hit_marker = true
         }
         if($(this).hasClass("story")) {
-          points += 1*$(this).children(".points").text();
+          if(!hit_marker) {
+            points += 1*$(this).children(".points").text();
+          }
+          value += 1*$(this).children(".value").text();
           running_points += 1*$(this).children(".points").text();
         }
       });
       if(fixed_points) {
-        next = points + 1*$(marker).next().children(".points").text();
-        prev = points - 1*$(marker).prev().children(".points").text();
+        var next = points + 1*$(marker).next().children(".points").text();
+        var prev = points - 1*$(marker).prev().children(".points").text();
         if((next <= fixed_points) && $(marker).next().length) {
           $(marker).next().after(marker);
           marker_move_rec(marker);
@@ -111,14 +191,15 @@ $(function() {
           marker_move_rec(marker);
         }
       }
-      return [points, running_points]
+      return [points, running_points, value]
     }
     $('.marker').each(function() {
-      points = 0;
-      running_points = 0;
-      hit_marker = false;
-      p = marker_move_rec(this);
+      var points = 0;
+      var running_points = 0;
+      var hit_marker = false;
+      var p = marker_move_rec(this);
       $(this).find(".points").text(p[0] + " of " + p[1]);
+      $(this).find(".value").text(p[2]);
       console.log(p);
       /*
       $(this).prevAll().each(function() {
@@ -149,9 +230,15 @@ $(function() {
     subtask.attr("points", task.find(".points").text());
     subtask.click(function() {
       $(this).remove();
-      reScore();
+      reScoreAll();
     });
     return subtask;
+  }
+  var assign = function(assignee, item) {
+    var id = $(item).attr("id");
+    if(!$(assignee).find(".sub-tasks li[task_id='" + id + "']").length) {
+      assignee.find(".sub-tasks").append(getSubTask(id));
+    }
   }
   var doit = function() {
     $( "#tasks li").draggable({
