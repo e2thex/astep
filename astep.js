@@ -61,27 +61,74 @@ $(function() {
     tform.dialog();
  
   });
-  var addStory = function(id) {
+  var addStory = function(id, title) {
     var id = typeof id == 'undefined' ? uuid() : id;
     var newli = $("<li class = 'for-assign ui-state-default story' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE> </div><div class = 'value contenteditable' contenteditable=TRUE></div><div class = 'points' ></div><ul class = 'sub-tasks'></ul></li>");
     $("#stories").append(newli);
-    newli.find(".title").focus();
+    if(typeof title != 'undefined') {
+      newli.find(".title").html(title);
+    }
+    else {
+      newli.find(".title").focus();
+    }
     doit();
     return newli;
   }
   $( "#add-story").click(function() {
     addStory();
   });
-  $( "#add-marker").click(function() {
-    id = uuid();
-    console.log(id);
-    newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'value'></div> <div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
+  var addMark = function(id, title) {
+    var id = typeof id == 'undefined' ? uuid() : id;
+    var newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'value'></div> <div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
     $("#stories").append(newli);
-    newli.find(".title").focus();
+    if(typeof title != 'undefined') {
+      newli.find(".title").html(title);
+    }
+    else {
+      newli.find(".title").focus();
+    }
     doit();
+    return newli;
+  }
+  $( "#add-marker").click(function() {
+    addMark();
   })
   $(".save").click(function(e) {
     e.preventDefault();
+    var data = {}
+    data.stories = [];
+    data.tasks = [];
+    $("#stories >li").each(function() {
+      var item = {
+        id: $(this).attr("id"),
+        type: $(this).hasClass("story") ? 'story' : 'mark',
+        title: $(this).find(".title").html(),
+        value: $(this).find(".value").html(),
+        deps: []
+      };
+      $(this).find('.sub-tasks > li').each(function() {
+        item.deps.push($(this).attr("task_id"));
+      });
+      data.stories.push(item);
+    });
+    $("#tasks >li").each(function() {
+      var item = {
+        id: $(this).attr("id"),
+        title: $(this).find(".title").html(),
+        points: $(this).find(".points").html(),
+        deps: []
+      };
+      $(this).find('.sub-tasks > li').each(function() {
+        item.deps.push($(this).attr("task_id"));
+      });
+      data.tasks.push(item);
+    });
+    console.log(data);
+
+    if(db = window.location.hash.substring(-1)) {
+      $.post("backend.php?db="+dbname, {data:out})
+    }
+
     s = $("html").html();
     s = "<html>"+s+"</html>";
     s = s.replace(/\r\n|\r/g, "\n");
