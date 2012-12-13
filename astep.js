@@ -123,10 +123,9 @@ $(function() {
       });
       data.tasks.push(item);
     });
-    console.log(data);
 
-    if(db = window.location.hash.substring(-1)) {
-      $.post("backend.php?db="+dbname, {data:out})
+    if(db = window.location.hash.substring(1)) {
+      $.post("backend.php?db="+db, {data:data})
     }
 
     s = $("html").html();
@@ -247,7 +246,6 @@ $(function() {
       var p = marker_move_rec(this);
       $(this).find(".points").text(p[0] + " of " + p[1]);
       $(this).find(".value").text(p[2]);
-      console.log(p);
       /*
       $(this).prevAll().each(function() {
         hit_marker = hit_marker || $(this).hasClass("marker");
@@ -264,10 +262,16 @@ $(function() {
     });
   };
   $('.selector-all').click(function() {
-    $(this).parents(".col").find(".selector").attr("checked", "checked");
+    $(this).parents(".columns").find(".selector").attr("checked", "checked");
+  });
+  $('.collapse-selected').click(function() {
+    $(this).parents(".columns").find(".selector:checked").parents("li").find("ul.sub-tasks").addClass("collapse");
+  });
+  $('.expand-selected').click(function() {
+    $(this).parents(".columns").find(".selector:checked").parents("li").find("ul.sub-tasks").removeClass("collapse");
   });
   $('.selector-clear').click(function() {
-    $(this).parents(".col").find(".selector").removeAttr("checked");
+    $(this).parents(".columns").find(".selector").removeAttr("checked");
   });
   var getSubTask = function(id) {
     task = $("#" + id);
@@ -298,7 +302,6 @@ $(function() {
         ui.helper.append(selected);
       },
       'end' : function (e, ui) {
-       console.log(ui); 
       }
     });
     $("li.for-assign").droppable({
@@ -316,7 +319,6 @@ $(function() {
           });
           reScoreAll();
         }
-        console.log(ui);
       }
     });
   }
@@ -324,6 +326,18 @@ $(function() {
   $( "#tasks" ).sortable({
     placeholder: "placeholder",
     handle: '.handle',
+    'start': function (e, ui) { 
+      selected = $(ui.item).siblings().has(".selector:checked");
+      ui.item.append(selected);
+    },
+    stop : function(e,ui){
+      //reScore(ui.item);
+      if(ui.item.hasClass("task")) {
+        ui.item.after(ui.item.find("li.task"));
+      }
+      reScoreAll();
+      $(ui.item).parents(".columns").find(".selector").removeAttr("checked");
+    }
   });
   $( "#stories" ).sortable({
     placeholder: "placeholder",
@@ -334,7 +348,6 @@ $(function() {
     'start': function (e, ui) { 
       selected = $(ui.item).siblings().has(".selector:checked");
       ui.item.append(selected);
-
     },
     stop : function(e,ui){
       //reScore(ui.item);
@@ -342,9 +355,46 @@ $(function() {
         ui.item.after(ui.item.find("li.story"));
       }
       reScoreAll();
+      $(ui.item).parents(".columns").find(".selector").removeAttr("checked");
     }
   })
   $( "#stories" ).disableSelection();
+
+  if(db = window.location.hash.substring(1)) {
+    $.getJSON("backend.php?db="+db, function(data) {
+      console.log(data);
+      data.tasks.forEach(function(task) {
+        var li = addTask(task.id, task.title, task.points);
+      });
+      data.tasks.forEach(function(task) {
+        if(typeof task.deps != 'undefined') {
+          task.deps.forEach(function(depid) {
+            var dep = $("#"+depid);
+            var assignee = $("#"+task.id);
+            assign(assignee, dep);
+          });
+        }
+        
+      });
+      data.stories.forEach(function(story) {
+        if(story.type == "story") {
+          var li = addStory(story.id, story.title, story.value);
+          if(typeof story.deps != 'undefined') {
+            story.deps.forEach(function(depid) {
+              var dep = $("#"+depid);
+              assign(li, dep);
+            });
+          }
+        }
+        else {
+          var li = addMark(story.id, story.title);
+        }
+      });
+      reScoreAll();
+      doit();
+    });
+  }
+  
 });
 })(jQuery);
 
