@@ -79,7 +79,7 @@ $(function() {
   });
   var addMark = function(id, title) {
     var id = typeof id == 'undefined' ? uuid() : id;
-    var newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'value'></div> <div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
+    var newli = $("<li class = 'marker ui-state-default' id ='"+id+"'><input type='checkbox' class = 'selector' /><div class = 'ui-icon ui-icon-arrowthick-2-n-s handle'></div><div class = 'title contenteditable' contenteditable=TRUE></div><div class = 'value'></div> <div class = 'fixed-points contenteditable' contenteditable=TRUE></div><div class = 'points' ></div></li>");
     $("#stories").append(newli);
     if(typeof title != 'undefined') {
       newli.find(".title").html(title);
@@ -134,7 +134,7 @@ $(function() {
     base = document.URL.replace(/\/[^\/]*html/, "/");
     s = s.replace(/\.\//g, base);
     uri = "data:text/html;charset=utf-8,"+s;
-    $(".save").attr("href", uri);
+    //$(".save").attr("href", uri);
   });
   $( "#add-task").click(function() {
     addTask();
@@ -353,6 +353,11 @@ $(function() {
       //reScore(ui.item);
       if(ui.item.hasClass("story")) {
         ui.item.after(ui.item.find("li.story"));
+        ui.item.after(ui.item.find("li.marker"));
+      }
+      if(ui.item.hasClass("marker")) {
+        ui.item.after(ui.item.find("li.story"));
+        ui.item.after(ui.item.find("li.marker"));
       }
       reScoreAll();
       $(ui.item).parents(".columns").find(".selector").removeAttr("checked");
@@ -363,19 +368,21 @@ $(function() {
   if(db = window.location.hash.substring(1)) {
     $.getJSON("backend.php?db="+db, function(data) {
       console.log(data);
-      data.tasks.forEach(function(task) {
-        var li = addTask(task.id, task.title, task.points);
-      });
-      data.tasks.forEach(function(task) {
-        if(typeof task.deps != 'undefined') {
-          task.deps.forEach(function(depid) {
-            var dep = $("#"+depid);
-            var assignee = $("#"+task.id);
-            assign(assignee, dep);
-          });
-        }
-        
-      });
+      if(typeof data.tasks != 'undefined') {
+        data.tasks.forEach(function(task) {
+          var li = addTask(task.id, task.title, task.points);
+        });
+        data.tasks.forEach(function(task) {
+          if(typeof task.deps != 'undefined') {
+            task.deps.forEach(function(depid) {
+              var dep = $("#"+depid);
+              var assignee = $("#"+task.id);
+              assign(assignee, dep);
+            });
+          }
+          
+        });
+      }
       data.stories.forEach(function(story) {
         if(story.type == "story") {
           var li = addStory(story.id, story.title, story.value);
@@ -394,6 +401,24 @@ $(function() {
       doit();
     });
   }
+  $(".stay-on-top").each(function() {
+    $(this).data("offset", $(this).offset().top);
+    $(this).data("offsetLeft", $(this).offset().left);
+  });
+  $(window).bind("scroll", function() {
+      var offset = $(this).scrollTop();
+      
+      $(".stay-on-top").each(function() {
+        if (offset >= $(this).data("offset")) {
+          $(this).addClass("fixed");
+
+          $(this).css("left", $(this).data("offsetLeft"));
+        }
+        else {
+          $(this).removeClass("fixed");
+        }
+      });
+  });
   
 });
 })(jQuery);

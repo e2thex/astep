@@ -102,3 +102,10 @@
 .collapse {
   display:none;
 }
+
+.stay-on-top.fixed {
+position:fixed;
+top:0;
+background : #fff;
+z-index:10;
+}
